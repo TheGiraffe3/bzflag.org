@@ -35,8 +35,20 @@ jobs:
         with:
           source: ./
           destination: ./_site
+      - name: Debug Gem Environment
+        run: |
+          echo "--- gem env ---"
+          gem env
+          echo "--- bundler version ---"
+          bundle -v || true
+          echo "--- bundle list ---"
+          bundle list || true
+          echo "--- info github-pages ---"
+          bundle info github-pages || true
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./_site
 
   # Deployment job
   deploy:
