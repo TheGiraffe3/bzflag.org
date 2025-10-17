@@ -28,13 +28,33 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
-      - name: Build with Jekyll
-        uses: actions/jekyll-build-pages@v1
+
+      # Explicit Ruby + Bundler steps so failures are visible in logs
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
         with:
-          source: ./
-          destination: ./_site
+          # Use Ruby 2.7 for compatibility with older GitHub Pages gems (adjust if needed)
+          ruby-version: '2.7'
+
+      - name: Cache Ruby gems
+        uses: actions/cache@v4
+        with:
+          path: vendor/bundle
+          key: ${{ runner.os }}-gems-${{ hashFiles('**/Gemfile.lock') }}
+          restore-keys: ${{ runner.os }}-gems-
+
+      - name: Install dependencies
+        run: |
+          gem install bundler || true
+          bundle config set --local path 'vendor/bundle'
+          bundle install --jobs 4 --retry 3
+
+      - name: Build with Jekyll
+        run: bundle exec jekyll build --source ./ --destination ./_site
+
       - name: Debug Gem Environment
         run: |
           echo "--- gem env ---"
@@ -45,6 +65,7 @@ jobs:
           bundle list || true
           echo "--- info github-pages ---"
           bundle info github-pages || true
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
